@@ -10,25 +10,35 @@ export const App = () => {
   const user = useTracker(() => Meteor.user());
   const logout = () => Meteor.logout();
   const [hideCompleted, setHideCompleted] = useState(false);
-   const hideCompletedFilter = { isChecked: { $ne: true } };
+  const [filterText, setFilterText] = useState("");
+  const hideCompletedFilter = { isChecked: { $ne: true } };
   const handleToggleChecked = ({ _id, isChecked }) =>
     Meteor.callAsync("tasks.toggleChecked", { _id, isChecked });
   const isLoading = useSubscribe("tasks");
-  const tasks = useTracker(() =>
-    TasksCollection.find(hideCompleted ? hideCompletedFilter : {}, {
+  const tasks = useTracker(() => {
+    const query = {
+      ...(hideCompleted ? hideCompletedFilter : {}),
+      ...(filterText
+        ? { text: { $regex: filterText, $options: "i" } }
+        : {}),
+    };
+    return TasksCollection.find(query, {
       sort: { createdAt: -1 },
-    }).fetch()
-  );
+    }).fetch();
+  });
   const handleDelete = ({ _id }) =>
     Meteor.callAsync("tasks.delete", { _id });
-   const pendingTasksCount = useTracker(() =>
+  const pendingTasksCount = useTracker(() =>
     TasksCollection.find(hideCompletedFilter).count()
   );
-  const pendingTasksTitle = `${
-    pendingTasksCount ? ` (${pendingTasksCount})` : ''
-  }`;
-   const handleEditTask = (_id, newText) =>
+  const pendingTasksTitle = `${pendingTasksCount ? ` (${pendingTasksCount})` : ''
+    }`;
+  const handleEditTask = (_id, newText) =>
     Meteor.callAsync("tasks.updateText", { _id, newText });
+
+  const filteredTasks = tasks.filter(task =>
+    task.text.toLowerCase().includes(filterText.toLowerCase())
+  );
 
   if (isLoading()) {
     return <div>Loading...</div>;
@@ -49,6 +59,15 @@ export const App = () => {
               {user.username} 🚪
             </div>
             <TaskForm />
+            { }
+            <div className="filter-bar">
+              <input
+                type="text"
+                placeholder="Filter tasks by name"
+                value={filterText}
+                onChange={e => setFilterText(e.target.value)}
+              />
+            </div>
 
             <div className="filter">
               <button onClick={() => setHideCompleted(!hideCompleted)}>

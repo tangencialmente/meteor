@@ -184,3 +184,23 @@ header {
   font-weight: bold;
   cursor: pointer;
 }
+
+.filter-bar {
+  display: flex;
+  margin: 16px;
+}
+
+.filter-bar > input {
+  flex-grow: 1;
+  box-sizing: border-box;
+  padding: 10px 6px;
+  background: transparent;
+  border: 1px solid #aaa;
+  width: 100%;
+  font-size: 1em;
+  margin-right: 16px;
+}
+
+.filter-bar > input:focus {
+  outline: 0;
+}
